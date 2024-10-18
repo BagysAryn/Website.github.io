@@ -28,22 +28,17 @@
 
         #schedule {
             margin-top: 20px;
+            text-align: center;
         }
 
-        .table {
-            width: 100%;
-            margin-bottom: 20px;
-        }
-
-        .table th, .table td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
+        .pair {
+            font-size: 1.5em;
+            margin: 20px;
         }
 
         .button {
             display: block;
-            margin: 0 auto;
+            margin: 20px auto;
             padding: 10px 20px;
             background-color: #007BFF;
             color: white;
@@ -61,11 +56,11 @@
     <div class="container">
         <h1>Jadwal Tempat Duduk Harian</h1>
         <div id="schedule">
-            <!-- Jadwal akan muncul di sini -->
+            <!-- Pasangan yang akan duduk bersama akan muncul di sini -->
         </div>
-        <button class="button" onclick="generateSchedule()">Buat Jadwal Baru</button>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
     <script>
         // Daftar nama murid laki-laki dan perempuan
         const lakiLaki = [
@@ -78,10 +73,10 @@
             "INEZ", "MEVITA", "MERLINDA", "NABELLA", "NIKEN", "RENITA", "SHERIL", "SHILA"
         ];
 
-        // Fungsi untuk mengacak urutan array
-        function shuffle(array) {
+        // Fungsi untuk mengacak urutan array secara deterministik menggunakan seed
+        function shuffle(array, rng) {
             for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+                const j = Math.floor(rng() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
@@ -89,29 +84,27 @@
 
         // Fungsi untuk membuat pasangan duduk acak setiap hari
         function generateSchedule() {
-            const shuffledLakiLaki = shuffle([...lakiLaki]);  // Salin dan acak array laki-laki
-            const shuffledPerempuan = shuffle([...perempuan]);  // Salin dan acak array perempuan
+            const currentDate = new Date().toISOString().slice(0, 10); // Mengambil tanggal hari ini
+            Math.seedrandom(currentDate); // Menetapkan seed berdasarkan tanggal hari ini
+
+            const shuffledLakiLaki = shuffle([...lakiLaki], Math.random);  // Salin dan acak array laki-laki
+            const shuffledPerempuan = shuffle([...perempuan], Math.random);  // Salin dan acak array perempuan
 
             const scheduleDiv = document.getElementById("schedule");
             scheduleDiv.innerHTML = '';  // Bersihkan jadwal sebelumnya
 
-            const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
-            let jadwal = '';
+            // Ambil pasangan pertama dari daftar yang sudah diacak
+            const lakiDipilih = shuffledLakiLaki[0];
+            const perempuanDipilih = shuffledPerempuan[0];
 
-            days.forEach(day => {
-                jadwal += `<h2>${day}</h2><table class="table"><thead><tr><th>Laki-laki</th><th>Perempuan</th></tr></thead><tbody>`;
-
-                for (let i = 0; i < shuffledLakiLaki.length; i++) {
-                    if (i < shuffledPerempuan.length) {
-                        jadwal += `<tr><td>${shuffledLakiLaki[i]}</td><td>${shuffledPerempuan[i]}</td></tr>`;
-                    }
-                }
-
-                jadwal += '</tbody></table>';
-            });
-
-            scheduleDiv.innerHTML = jadwal;
+            // Menampilkan pasangan
+            scheduleDiv.innerHTML = `<div class="pair"><strong>${lakiDipilih}</strong> duduk bersama <strong>${perempuanDipilih}</strong></div>`;
         }
+
+        // Generate schedule automatically when page loads
+        window.onload = function() {
+            generateSchedule();
+        };
     </script>
 </body>
 </html>
