@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Tempat Duduk Harian</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        #schedule {
+            margin-top: 20px;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .table th, .table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .button {
+            display: block;
+            margin: 0 auto;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Jadwal Tempat Duduk Harian</h1>
+        <div id="schedule">
+            <!-- Jadwal akan muncul di sini -->
+        </div>
+        <button class="button" onclick="generateSchedule()">Buat Jadwal Baru</button>
+    </div>
+
+    <script>
+        // Daftar nama murid laki-laki dan perempuan
+        const lakiLaki = [
+            "ADILLA", "AHMAD NUR", "AHMAD SYEH", "AKMAL", "AMIR", "ANDHIKA", "BAGUS", "BINTANG", "HANDIKA", "HAYDAR", 
+            "LUCKY", "MUHAMMAD RICO", "MUHAMMAD YUSRIL", "NOVAL", "RAKA", "RAYES", "YUDHA"
+        ];
+
+        const perempuan = [
+            "ALMIRA", "ANDHINI", "ANINDYA", "ARIN", "CANDRAKA", "CELIN", "DIANITA", "ELIZA", "FARAHDIYAH", "INDRI", 
+            "INEZ", "MEVITA", "MERLINDA", "NABELLA", "NIKEN", "RENITA", "SHERIL", "SHILA"
+        ];
+
+        // Fungsi untuk mengacak urutan array
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Fungsi untuk membuat pasangan duduk acak setiap hari
+        function generateSchedule() {
+            const shuffledLakiLaki = shuffle([...lakiLaki]);  // Salin dan acak array laki-laki
+            const shuffledPerempuan = shuffle([...perempuan]);  // Salin dan acak array perempuan
+
+            const scheduleDiv = document.getElementById("schedule");
+            scheduleDiv.innerHTML = '';  // Bersihkan jadwal sebelumnya
+
+            const days = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat"];
+            let jadwal = '';
+
+            days.forEach(day => {
+                jadwal += `<h2>${day}</h2><table class="table"><thead><tr><th>Laki-laki</th><th>Perempuan</th></tr></thead><tbody>`;
+
+                for (let i = 0; i < shuffledLakiLaki.length; i++) {
+                    if (i < shuffledPerempuan.length) {
+                        jadwal += `<tr><td>${shuffledLakiLaki[i]}</td><td>${shuffledPerempuan[i]}</td></tr>`;
+                    }
+                }
+
+                jadwal += '</tbody></table>';
+            });
+
+            scheduleDiv.innerHTML = jadwal;
+        }
+    </script>
+</body>
+</html>
