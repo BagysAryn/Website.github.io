@@ -70,57 +70,82 @@
             "INEZ", "MEVITA", "MERLINDA", "NABELLA", "NIKEN", "RENITA", "SHERIL", "SHILA"
         ];
 
-        // Fungsi untuk mengacak urutan array secara deterministik menggunakan seed
-        function shuffle(array, rng) {
+        // Fungsi untuk mengacak urutan array
+        function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
+                const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
         }
 
-        // Fungsi untuk mendapatkan pasangan yang tersimpan atau mengacak pasangan baru
+        // Fungsi untuk mendapatkan pasangan yang valid
+        function getValidPair(usedNames) {
+            const availableLakiLaki = lakiLaki.filter(name => !usedNames.lakiLaki.includes(name));
+            const availablePerempuan = perempuan.filter(name => !usedNames.perempuan.includes(name));
+
+            if (availableLakiLaki.length === 0 || availablePerempuan.length === 0) {
+                return null;
+            }
+
+            const shuffledLakiLaki = shuffle(availableLakiLaki);
+            const shuffledPerempuan = shuffle(availablePerempuan);
+
+            return [shuffledLakiLaki[0], shuffledPerempuan[0]];
+        }
+
+        // Fungsi untuk mendapatkan pasangan yang baru
         function getOrGeneratePair() {
             const currentDate = new Date();
-            const currentTimeSlot = Math.floor(currentDate.getTime() / (45 * 60 * 1000)); // Membagi waktu sekarang dengan 45 menit
+            const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
-            // Cek apakah pasangan sudah disimpan untuk slot waktu ini
-            const savedPairData = JSON.parse(localStorage.getItem("currentPair")) || {};
-            if (savedPairData.timeSlot === currentTimeSlot) {
-                return savedPairData.pair;
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                return null; // Tidak ada jadwal di hari libur
             }
 
-            // Jika belum ada pasangan untuk slot waktu ini, acak pasangan baru
-            Math.seedrandom(currentDate.toISOString().slice(0, 10) + currentTimeSlot); // Seed berdasarkan tanggal dan slot waktu saat ini
-            const shuffledLakiLaki = shuffle([...lakiLaki], Math.random);  // Salin dan acak array laki-laki
-            const shuffledPerempuan = shuffle([...perempuan], Math.random);  // Salin dan acak array perempuan
+            const currentTime = Math.floor(currentDate.getTime() / (45 * 60 * 1000)); // Hitung waktu dalam slot 45 menit
+            const storedTime = localStorage.getItem("lastUpdated") || 0;
 
-            let lakiDipilih, perempuanDipilih;
-            for (let i = 0; i < shuffledLakiLaki.length; i++) {
-                lakiDipilih = shuffledLakiLaki[i];
-                perempuanDipilih = shuffledPerempuan[i];
-                break;
+            // Cek apakah 45 menit telah berlalu
+            if (storedTime && currentTime <= parseInt(storedTime)) {
+                return JSON.parse(localStorage.getItem("currentPair")) || null;
             }
 
-            // Simpan pasangan untuk slot waktu ini
-            const newPairData = { timeSlot: currentTimeSlot, pair: [lakiDipilih, perempuanDipilih] };
-            localStorage.setItem("currentPair", JSON.stringify(newPairData));
+            // Jika 45 menit telah berlalu atau tidak ada pasangan tersimpan, acak pasangan baru
+            const usedNames = JSON.parse(localStorage.getItem("usedNames")) || { lakiLaki: [], perempuan: [] };
+            const newPair = getValidPair(usedNames);
 
-            return newPairData.pair;
+            if (!newPair) {
+                return null; // Tidak ada pasangan yang valid
+            }
+
+            // Simpan pasangan baru dan waktu
+            usedNames.lakiLaki.push(newPair[0]);
+            usedNames.perempuan.push(newPair[1]);
+            localStorage.setItem("usedNames", JSON.stringify(usedNames));
+            localStorage.setItem("currentPair", JSON.stringify(newPair));
+            localStorage.setItem("lastUpdated", currentTime);
+
+            return newPair;
         }
 
         // Fungsi untuk menampilkan pasangan yang dipilih
         function displayPair() {
             const pair = getOrGeneratePair();
             const scheduleDiv = document.getElementById("schedule");
-            scheduleDiv.innerHTML = `<div class="pair"><strong>${pair[0]}</strong> duduk bersama <strong>${pair[1]}</strong></div>`;
+
+            if (pair) {
+                scheduleDiv.innerHTML = `<div class="pair"><strong>${pair[0]}</strong> duduk bersama <strong>${pair[1]}</strong></div>`;
+            } else {
+                scheduleDiv.innerHTML = `<div class="pair">Tidak ada jadwal saat ini</div>`;
+            }
         }
 
-        // Generate schedule automatically when page loads
+        // Menampilkan jadwal saat halaman dimuat
         window.onload = function() {
             displayPair();
             setInterval(displayPair, 45 * 60 * 1000); // Update pasangan setiap 45 menit
         };
     </script>
 </body>
-</html>
+</html
