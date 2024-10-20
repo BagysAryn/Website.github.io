@@ -97,22 +97,24 @@
         // Fungsi untuk mendapatkan pasangan yang baru
         function getOrGeneratePair() {
             const currentDate = new Date();
-            const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const dayOfWeek = currentDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 return null; // Tidak ada jadwal di hari libur
             }
 
-            const currentTime = Math.floor(currentDate.getTime() / (45 * 60 * 1000)); // Hitung waktu dalam slot 45 menit
-            const storedTime = localStorage.getItem("lastUpdated") || 0;
+            const storedTime = localStorage.getItem("lastUpdated");
+            const usedNames = JSON.parse(localStorage.getItem("usedNames")) || { lakiLaki: [], perempuan: [] };
 
-            // Cek apakah 45 menit telah berlalu
-            if (storedTime && currentTime <= parseInt(storedTime)) {
-                return JSON.parse(localStorage.getItem("currentPair")) || null;
+            // Cek apakah sudah 43 menit berlalu
+            if (storedTime) {
+                const timeElapsed = (Date.now() - parseInt(storedTime)) / (1000 * 60); // Menghitung selisih waktu dalam menit
+                if (timeElapsed < 43) {
+                    return JSON.parse(localStorage.getItem("currentPair")) || null; // Kembalikan pasangan yang sama jika belum 43 menit
+                }
             }
 
-            // Jika 45 menit telah berlalu atau tidak ada pasangan tersimpan, acak pasangan baru
-            const usedNames = JSON.parse(localStorage.getItem("usedNames")) || { lakiLaki: [], perempuan: [] };
+            // Jika sudah 43 menit berlalu atau tidak ada pasangan tersimpan, acak pasangan baru
             const newPair = getValidPair(usedNames);
 
             if (!newPair) {
@@ -124,7 +126,7 @@
             usedNames.perempuan.push(newPair[1]);
             localStorage.setItem("usedNames", JSON.stringify(usedNames));
             localStorage.setItem("currentPair", JSON.stringify(newPair));
-            localStorage.setItem("lastUpdated", currentTime);
+            localStorage.setItem("lastUpdated", Date.now()); // Simpan waktu sekarang dalam milidetik
 
             return newPair;
         }
@@ -144,8 +146,8 @@
         // Menampilkan jadwal saat halaman dimuat
         window.onload = function() {
             displayPair();
-            setInterval(displayPair, 45 * 60 * 1000); // Update pasangan setiap 45 menit
+            setInterval(displayPair, 1000); // Periksa setiap detik untuk memperbarui tampilan
         };
     </script>
 </body>
-</html
+</html>
