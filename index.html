@@ -36,21 +36,6 @@
             margin: 20px;
         }
 
-        .button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .button:hover {
-            background-color: #0056b3;
-        }
-
         footer {
             position: fixed;
             bottom: 10px;
@@ -94,78 +79,47 @@
             return array;
         }
 
-        // Fungsi untuk mengambil pasangan yang sudah digunakan selama seminggu
-        function getWeeklyPairs() {
-            const weeklyPairs = JSON.parse(localStorage.getItem("weeklyPairs")) || [];
-            const currentDate = new Date().toISOString().slice(0, 10);
-            const currentWeek = new Date().getWeekNumber();
+        // Fungsi untuk mendapatkan pasangan yang tersimpan atau mengacak pasangan baru
+        function getOrGeneratePair() {
+            const currentDate = new Date();
+            const currentTimeSlot = Math.floor(currentDate.getTime() / (45 * 60 * 1000)); // Membagi waktu sekarang dengan 45 menit
 
-            // Jika minggu baru, hapus data lama
-            if (!weeklyPairs.some(pair => pair.week === currentWeek)) {
-                localStorage.removeItem("weeklyPairs");
-                return [];
+            // Cek apakah pasangan sudah disimpan untuk slot waktu ini
+            const savedPairData = JSON.parse(localStorage.getItem("currentPair")) || {};
+            if (savedPairData.timeSlot === currentTimeSlot) {
+                return savedPairData.pair;
             }
 
-            return weeklyPairs;
-        }
-
-        // Fungsi untuk menyimpan pasangan ke dalam localStorage
-        function saveWeeklyPair(pair) {
-            const weeklyPairs = getWeeklyPairs();
-            const currentWeek = new Date().getWeekNumber();
-            weeklyPairs.push({ week: currentWeek, pair: pair });
-            localStorage.setItem("weeklyPairs", JSON.stringify(weeklyPairs));
-        }
-
-        // Fungsi untuk membuat pasangan duduk acak setiap 45 menit
-        function generateSchedule() {
-            const weeklyPairs = getWeeklyPairs();
-
-            const currentDate = new Date().toISOString().slice(0, 10); // Mengambil tanggal hari ini
-            Math.seedrandom(currentDate); // Menetapkan seed berdasarkan tanggal hari ini
-
+            // Jika belum ada pasangan untuk slot waktu ini, acak pasangan baru
+            Math.seedrandom(currentDate.toISOString().slice(0, 10)); // Seed berdasarkan tanggal hari ini
             const shuffledLakiLaki = shuffle([...lakiLaki], Math.random);  // Salin dan acak array laki-laki
             const shuffledPerempuan = shuffle([...perempuan], Math.random);  // Salin dan acak array perempuan
 
-            const scheduleDiv = document.getElementById("schedule");
-            scheduleDiv.innerHTML = '';  // Bersihkan jadwal sebelumnya
-
-            // Cari pasangan yang belum digunakan selama seminggu
             let lakiDipilih, perempuanDipilih;
             for (let i = 0; i < shuffledLakiLaki.length; i++) {
-                if (!weeklyPairs.some(pair => pair.pair.includes(shuffledLakiLaki[i]) && pair.pair.includes(shuffledPerempuan[i]))) {
-                    lakiDipilih = shuffledLakiLaki[i];
-                    perempuanDipilih = shuffledPerempuan[i];
-                    break;
-                }
+                lakiDipilih = shuffledLakiLaki[i];
+                perempuanDipilih = shuffledPerempuan[i];
+                break;
             }
 
-            // Jika tidak ditemukan pasangan yang valid, ambil pasangan acak
-            if (!lakiDipilih || !perempuanDipilih) {
-                lakiDipilih = shuffledLakiLaki[0];
-                perempuanDipilih = shuffledPerempuan[0];
-            }
+            // Simpan pasangan untuk slot waktu ini
+            const newPairData = { timeSlot: currentTimeSlot, pair: [lakiDipilih, perempuanDipilih] };
+            localStorage.setItem("currentPair", JSON.stringify(newPairData));
 
-            // Menyimpan pasangan ini untuk minggu ini
-            saveWeeklyPair([lakiDipilih, perempuanDipilih]);
-
-            // Menampilkan pasangan
-            scheduleDiv.innerHTML = `<div class="pair"><strong>${lakiDipilih}</strong> duduk bersama <strong>${perempuanDipilih}</strong></div>`;
-
-            // Atur pengacakan ulang setiap 45 menit
-            setTimeout(generateSchedule, 45 * 60 * 1000);
+            return newPairData.pair;
         }
 
-        // Fungsi untuk mendapatkan nomor minggu
-        Date.prototype.getWeekNumber = function() {
-            const firstDayOfYear = new Date(this.getFullYear(), 0, 1);
-            const pastDaysOfYear = (this - firstDayOfYear) / 86400000;
-            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-        };
+        // Fungsi untuk menampilkan pasangan yang dipilih
+        function displayPair() {
+            const pair = getOrGeneratePair();
+            const scheduleDiv = document.getElementById("schedule");
+            scheduleDiv.innerHTML = `<div class="pair"><strong>${pair[0]}</strong> duduk bersama <strong>${pair[1]}</strong></div>`;
+        }
 
         // Generate schedule automatically when page loads
         window.onload = function() {
-            generateSchedule();
+            displayPair();
+            setInterval(displayPair, 45 * 60 * 1000); // Update pasangan setiap 45 menit
         };
     </script>
 </body>
