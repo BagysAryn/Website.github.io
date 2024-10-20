@@ -3,20 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Tempat Duduk Harian</title>
+    <title>Jadwal Duduk</title>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
         }
 
         .container {
@@ -26,13 +19,11 @@
             background-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
-            width: 90%;
         }
 
         h1 {
             text-align: center;
             color: #333;
-            font-size: 2em;
         }
 
         #schedule {
@@ -52,26 +43,6 @@
             transform: translateX(-50%);
             color: #666;
             font-size: 0.9em;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5em;
-            }
-
-            .pair {
-                font-size: 1.2em;
-                margin: 15px;
-            }
-
-            .container {
-                width: 95%;
-                padding: 10px;
-            }
-
-            footer {
-                font-size: 0.8em;
-            }
         }
     </style>
 </head>
@@ -99,44 +70,36 @@
             "INEZ", "MEVITA", "MERLINDA", "NABELLA", "NIKEN", "RENITA", "SHERIL", "SHILA"
         ];
 
-        // Fungsi untuk mengacak urutan array dengan seed
-        function acakArray(array, seed) {
-            Math.seedrandom(seed); // Set seed untuk random
+        // Fungsi untuk mengacak urutan array menggunakan seed
+        function shuffle(array, seed) {
+            const rng = new Math.seedrandom(seed); // Seeded random generator
             for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
+                const j = Math.floor(rng() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
             return array;
         }
 
-        // Fungsi untuk mendapatkan pasangan yang valid
-        function dapatkanPasanganValid(seed) {
-            const lakiLakiAcak = acakArray([...lakiLaki], seed); // Copy array sebelum diacak
-            const perempuanAcak = acakArray([...perempuan], seed);
-
-            return [lakiLakiAcak[0], perempuanAcak[0]]; // Mengambil pasangan pertama
-        }
-
-        // Fungsi untuk mendapatkan pasangan yang baru berdasarkan seed (tanggal hari ini)
-        function dapatkanPasanganHariIni() {
-            const tanggalSekarang = new Date();
-            const hariDalamMinggu = tanggalSekarang.getUTCDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
-
-            if (hariDalamMinggu === 0 || hariDalamMinggu === 6) {
-                return null; // Tidak ada jadwal di hari libur
-            }
-
-            const seedHari = tanggalSekarang.toISOString().split('T')[0]; // Menggunakan tanggal sebagai seed
-            return dapatkanPasanganValid(seedHari); // Menggunakan seed berdasarkan tanggal
-        }
-
         // Fungsi untuk menampilkan pasangan yang dipilih
-        function tampilkanPasangan() {
-            const pasangan = dapatkanPasanganHariIni();
+        function displayPair() {
+            // Ambil tanggal UTC sebagai seed
+            const currentDate = new Date();
+            const seed = currentDate.getUTCFullYear() + '-' + (currentDate.getUTCMonth() + 1) + '-' + currentDate.getUTCDate();
+            
+            // Acak nama berdasarkan seed
+            const shuffledLakiLaki = shuffle([...lakiLaki], seed);
+            const shuffledPerempuan = shuffle([...perempuan], seed);
+
+            // Buat jadwal untuk setiap hari dalam seminggu
+            const dayOfWeek = currentDate.getUTCDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
+            const pairIndex = dayOfWeek % Math.min(shuffledLakiLaki.length, shuffledPerempuan.length); // Index bergantung pada hari
+
+            const pair = [shuffledLakiLaki[pairIndex], shuffledPerempuan[pairIndex]];
+
             const scheduleDiv = document.getElementById("schedule");
 
-            if (pasangan) {
-                scheduleDiv.innerHTML = `<div class="pair"><strong>${pasangan[0]}</strong> duduk bersama <strong>${pasangan[1]}</strong></div>`;
+            if (pair) {
+                scheduleDiv.innerHTML = `<div class="pair"><strong>${pair[0]}</strong> duduk bersama <strong>${pair[1]}</strong></div>`;
             } else {
                 scheduleDiv.innerHTML = `<div class="pair">Tidak ada jadwal saat ini</div>`;
             }
@@ -144,7 +107,7 @@
 
         // Menampilkan jadwal saat halaman dimuat
         window.onload = function() {
-            tampilkanPasangan();
+            displayPair();
         };
     </script>
 </body>
