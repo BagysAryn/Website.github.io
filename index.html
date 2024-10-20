@@ -1,15 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Jadwal Tempat Duduk Harian</title>
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
         }
 
         .container {
@@ -19,11 +26,13 @@
             background-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+            width: 90%;
         }
 
         h1 {
             text-align: center;
             color: #333;
+            font-size: 2em;
         }
 
         #schedule {
@@ -44,6 +53,26 @@
             color: #666;
             font-size: 0.9em;
         }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .pair {
+                font-size: 1.2em;
+                margin: 15px;
+            }
+
+            .container {
+                width: 95%;
+                padding: 10px;
+            }
+
+            footer {
+                font-size: 0.8em;
+            }
+        }
     </style>
 </head>
 <body>
@@ -54,7 +83,7 @@
         </div>
     </div>
     <footer>
-        Dibuat Bagus Arya
+        Dibuat oleh Bagus Arya
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
@@ -70,8 +99,9 @@
             "INEZ", "MEVITA", "MERLINDA", "NABELLA", "NIKEN", "RENITA", "SHERIL", "SHILA"
         ];
 
-        // Fungsi untuk mengacak urutan array
-        function shuffle(array) {
+        // Fungsi untuk mengacak urutan array dengan seed
+        function acakArray(array, seed) {
+            Math.seedrandom(seed); // Set seed untuk random
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
@@ -80,64 +110,66 @@
         }
 
         // Fungsi untuk mendapatkan pasangan yang valid
-        function getValidPair(usedNames) {
-            const availableLakiLaki = lakiLaki.filter(name => !usedNames.lakiLaki.includes(name));
-            const availablePerempuan = perempuan.filter(name => !usedNames.perempuan.includes(name));
+        function dapatkanPasanganValid(namaTerpakai, seed) {
+            const lakiLakiTersedia = lakiLaki.filter(nama => !namaTerpakai.lakiLaki.includes(nama));
+            const perempuanTersedia = perempuan.filter(nama => !namaTerpakai.perempuan.includes(nama));
 
-            if (availableLakiLaki.length === 0 || availablePerempuan.length === 0) {
+            if (lakiLakiTersedia.length === 0 || perempuanTersedia.length === 0) {
                 return null;
             }
 
-            const shuffledLakiLaki = shuffle(availableLakiLaki);
-            const shuffledPerempuan = shuffle(availablePerempuan);
+            const lakiLakiAcak = acakArray(lakiLakiTersedia, seed);
+            const perempuanAcak = acakArray(perempuanTersedia, seed);
 
-            return [shuffledLakiLaki[0], shuffledPerempuan[0]];
+            return [lakiLakiAcak[0], perempuanAcak[0]];
         }
 
         // Fungsi untuk mendapatkan pasangan yang baru
-        function getOrGeneratePair() {
-            const currentDate = new Date();
-            const dayOfWeek = currentDate.getUTCDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+        function dapatkanAtauBuatPasangan() {
+            const tanggalSekarang = new Date();
+            const hariDalamMinggu = tanggalSekarang.getUTCDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
 
-            if (dayOfWeek === 0 || dayOfWeek === 6) {
+            if (hariDalamMinggu === 0 || hariDalamMinggu === 6) {
                 return null; // Tidak ada jadwal di hari libur
             }
 
-            const storedTime = localStorage.getItem("lastUpdated");
-            const usedNames = JSON.parse(localStorage.getItem("usedNames")) || { lakiLaki: [], perempuan: [] };
+            const seedHari = tanggalSekarang.toISOString().split('T')[0]; // Menggunakan tanggal sebagai seed
+
+            const waktuTersimpan = localStorage.getItem("waktuTerakhirDiupdate");
+            const namaTerpakai = JSON.parse(localStorage.getItem("namaTerpakai")) || { lakiLaki: [], perempuan: [] };
 
             // Cek apakah sudah 43 menit berlalu
-            if (storedTime) {
-                const timeElapsed = (Date.now() - parseInt(storedTime)) / (1000 * 60); // Menghitung selisih waktu dalam menit
-                if (timeElapsed < 43) {
-                    return JSON.parse(localStorage.getItem("currentPair")) || null; // Kembalikan pasangan yang sama jika belum 43 menit
+            if (waktuTersimpan) {
+                const waktuBerlalu = (Date.now() - parseInt(waktuTersimpan)) / (1000 * 60); // Menghitung selisih waktu dalam menit
+                if (waktuBerlalu < 43) {
+                    return JSON.parse(localStorage.getItem("pasanganSaatIni")) || null; // Kembalikan pasangan yang sama jika belum 43 menit
                 }
             }
 
             // Jika sudah 43 menit berlalu atau tidak ada pasangan tersimpan, acak pasangan baru
-            const newPair = getValidPair(usedNames);
+            const pasanganBaru = dapatkanPasanganValid(namaTerpakai, seedHari);
 
-            if (!newPair) {
+            if (!pasanganBaru) {
                 return null; // Tidak ada pasangan yang valid
             }
 
             // Simpan pasangan baru dan waktu
-            usedNames.lakiLaki.push(newPair[0]);
-            usedNames.perempuan.push(newPair[1]);
-            localStorage.setItem("usedNames", JSON.stringify(usedNames));
-            localStorage.setItem("currentPair", JSON.stringify(newPair));
-            localStorage.setItem("lastUpdated", Date.now()); // Simpan waktu sekarang dalam milidetik
+            namaTerpakai.lakiLaki.push(pasanganBaru[0]);
+            namaTerpakai.perempuan.push(pasanganBaru[1]);
+            localStorage.setItem("namaTerpakai", JSON.stringify(namaTerpakai));
+            localStorage.setItem("pasanganSaatIni", JSON.stringify(pasanganBaru));
+            localStorage.setItem("waktuTerakhirDiupdate", Date.now()); // Simpan waktu sekarang dalam milidetik
 
-            return newPair;
+            return pasanganBaru;
         }
 
         // Fungsi untuk menampilkan pasangan yang dipilih
-        function displayPair() {
-            const pair = getOrGeneratePair();
+        function tampilkanPasangan() {
+            const pasangan = dapatkanAtauBuatPasangan();
             const scheduleDiv = document.getElementById("schedule");
 
-            if (pair) {
-                scheduleDiv.innerHTML = `<div class="pair"><strong>${pair[0]}</strong> duduk bersama <strong>${pair[1]}</strong></div>`;
+            if (pasangan) {
+                scheduleDiv.innerHTML = `<div class="pair"><strong>${pasangan[0]}</strong> duduk bersama <strong>${pasangan[1]}</strong></div>`;
             } else {
                 scheduleDiv.innerHTML = `<div class="pair">Tidak ada jadwal saat ini</div>`;
             }
@@ -145,8 +177,8 @@
 
         // Menampilkan jadwal saat halaman dimuat
         window.onload = function() {
-            displayPair();
-            setInterval(displayPair, 1000); // Periksa setiap detik untuk memperbarui tampilan
+            tampilkanPasangan();
+            setInterval(tampilkanPasangan, 1000); // Periksa setiap detik untuk memperbarui tampilan
         };
     </script>
 </body>
