@@ -50,6 +50,15 @@
         .button:hover {
             background-color: #0056b3;
         }
+
+        footer {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #666;
+            font-size: 0.9em;
+        }
     </style>
 </head>
 <body>
@@ -59,6 +68,9 @@
             <!-- Pasangan yang akan duduk bersama akan muncul di sini -->
         </div>
     </div>
+    <footer>
+        Dibuat Bagus Arya
+    </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
     <script>
@@ -82,8 +94,33 @@
             return array;
         }
 
-        // Fungsi untuk membuat pasangan duduk acak setiap hari
+        // Fungsi untuk mengambil pasangan yang sudah digunakan selama seminggu
+        function getWeeklyPairs() {
+            const weeklyPairs = JSON.parse(localStorage.getItem("weeklyPairs")) || [];
+            const currentDate = new Date().toISOString().slice(0, 10);
+            const currentWeek = new Date().getWeekNumber();
+
+            // Jika minggu baru, hapus data lama
+            if (!weeklyPairs.some(pair => pair.week === currentWeek)) {
+                localStorage.removeItem("weeklyPairs");
+                return [];
+            }
+
+            return weeklyPairs;
+        }
+
+        // Fungsi untuk menyimpan pasangan ke dalam localStorage
+        function saveWeeklyPair(pair) {
+            const weeklyPairs = getWeeklyPairs();
+            const currentWeek = new Date().getWeekNumber();
+            weeklyPairs.push({ week: currentWeek, pair: pair });
+            localStorage.setItem("weeklyPairs", JSON.stringify(weeklyPairs));
+        }
+
+        // Fungsi untuk membuat pasangan duduk acak setiap 45 menit
         function generateSchedule() {
+            const weeklyPairs = getWeeklyPairs();
+
             const currentDate = new Date().toISOString().slice(0, 10); // Mengambil tanggal hari ini
             Math.seedrandom(currentDate); // Menetapkan seed berdasarkan tanggal hari ini
 
@@ -93,13 +130,38 @@
             const scheduleDiv = document.getElementById("schedule");
             scheduleDiv.innerHTML = '';  // Bersihkan jadwal sebelumnya
 
-            // Ambil pasangan pertama dari daftar yang sudah diacak
-            const lakiDipilih = shuffledLakiLaki[0];
-            const perempuanDipilih = shuffledPerempuan[0];
+            // Cari pasangan yang belum digunakan selama seminggu
+            let lakiDipilih, perempuanDipilih;
+            for (let i = 0; i < shuffledLakiLaki.length; i++) {
+                if (!weeklyPairs.some(pair => pair.pair.includes(shuffledLakiLaki[i]) && pair.pair.includes(shuffledPerempuan[i]))) {
+                    lakiDipilih = shuffledLakiLaki[i];
+                    perempuanDipilih = shuffledPerempuan[i];
+                    break;
+                }
+            }
+
+            // Jika tidak ditemukan pasangan yang valid, ambil pasangan acak
+            if (!lakiDipilih || !perempuanDipilih) {
+                lakiDipilih = shuffledLakiLaki[0];
+                perempuanDipilih = shuffledPerempuan[0];
+            }
+
+            // Menyimpan pasangan ini untuk minggu ini
+            saveWeeklyPair([lakiDipilih, perempuanDipilih]);
 
             // Menampilkan pasangan
             scheduleDiv.innerHTML = `<div class="pair"><strong>${lakiDipilih}</strong> duduk bersama <strong>${perempuanDipilih}</strong></div>`;
+
+            // Atur pengacakan ulang setiap 45 menit
+            setTimeout(generateSchedule, 45 * 60 * 1000);
         }
+
+        // Fungsi untuk mendapatkan nomor minggu
+        Date.prototype.getWeekNumber = function() {
+            const firstDayOfYear = new Date(this.getFullYear(), 0, 1);
+            const pastDaysOfYear = (this - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        };
 
         // Generate schedule automatically when page loads
         window.onload = function() {
