@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Tempat Duduk </title>
+    <title>Jadwal Tempat Duduk Harian</title>
     <style>
         * {
             box-sizing: border-box;
@@ -83,7 +83,7 @@
         </div>
     </div>
     <footer>
-        Dibuat oleh Bagus Arya L
+        Dibuat oleh Bagus Arya
     </footer>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
@@ -110,22 +110,15 @@
         }
 
         // Fungsi untuk mendapatkan pasangan yang valid
-        function dapatkanPasanganValid(namaTerpakai, seed) {
-            const lakiLakiTersedia = lakiLaki.filter(nama => !namaTerpakai.lakiLaki.includes(nama));
-            const perempuanTersedia = perempuan.filter(nama => !namaTerpakai.perempuan.includes(nama));
+        function dapatkanPasanganValid(seed) {
+            const lakiLakiAcak = acakArray([...lakiLaki], seed); // Copy array sebelum diacak
+            const perempuanAcak = acakArray([...perempuan], seed);
 
-            if (lakiLakiTersedia.length === 0 || perempuanTersedia.length === 0) {
-                return null;
-            }
-
-            const lakiLakiAcak = acakArray(lakiLakiTersedia, seed);
-            const perempuanAcak = acakArray(perempuanTersedia, seed);
-
-            return [lakiLakiAcak[0], perempuanAcak[0]];
+            return [lakiLakiAcak[0], perempuanAcak[0]]; // Mengambil pasangan pertama
         }
 
-        // Fungsi untuk mendapatkan pasangan yang baru
-        function dapatkanAtauBuatPasangan() {
+        // Fungsi untuk mendapatkan pasangan yang baru berdasarkan seed (tanggal hari ini)
+        function dapatkanPasanganHariIni() {
             const tanggalSekarang = new Date();
             const hariDalamMinggu = tanggalSekarang.getUTCDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
 
@@ -134,38 +127,12 @@
             }
 
             const seedHari = tanggalSekarang.toISOString().split('T')[0]; // Menggunakan tanggal sebagai seed
-
-            const waktuTersimpan = localStorage.getItem("waktuTerakhirDiupdate");
-            const namaTerpakai = JSON.parse(localStorage.getItem("namaTerpakai")) || { lakiLaki: [], perempuan: [] };
-
-            // Cek apakah sudah 43 menit berlalu
-            if (waktuTersimpan) {
-                const waktuBerlalu = (Date.now() - parseInt(waktuTersimpan)) / (1000 * 60); // Menghitung selisih waktu dalam menit
-                if (waktuBerlalu < 43) {
-                    return JSON.parse(localStorage.getItem("pasanganSaatIni")) || null; // Kembalikan pasangan yang sama jika belum 43 menit
-                }
-            }
-
-            // Jika sudah 43 menit berlalu atau tidak ada pasangan tersimpan, acak pasangan baru
-            const pasanganBaru = dapatkanPasanganValid(namaTerpakai, seedHari);
-
-            if (!pasanganBaru) {
-                return null; // Tidak ada pasangan yang valid
-            }
-
-            // Simpan pasangan baru dan waktu
-            namaTerpakai.lakiLaki.push(pasanganBaru[0]);
-            namaTerpakai.perempuan.push(pasanganBaru[1]);
-            localStorage.setItem("namaTerpakai", JSON.stringify(namaTerpakai));
-            localStorage.setItem("pasanganSaatIni", JSON.stringify(pasanganBaru));
-            localStorage.setItem("waktuTerakhirDiupdate", Date.now()); // Simpan waktu sekarang dalam milidetik
-
-            return pasanganBaru;
+            return dapatkanPasanganValid(seedHari); // Menggunakan seed berdasarkan tanggal
         }
 
         // Fungsi untuk menampilkan pasangan yang dipilih
         function tampilkanPasangan() {
-            const pasangan = dapatkanAtauBuatPasangan();
+            const pasangan = dapatkanPasanganHariIni();
             const scheduleDiv = document.getElementById("schedule");
 
             if (pasangan) {
@@ -178,7 +145,6 @@
         // Menampilkan jadwal saat halaman dimuat
         window.onload = function() {
             tampilkanPasangan();
-            setInterval(tampilkanPasangan, 1000); // Periksa setiap detik untuk memperbarui tampilan
         };
     </script>
 </body>
