@@ -1,114 +1,167 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Duduk</title>
+    <title>Seat Randomizer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
+            color: #333;
             margin: 0;
-            padding: 0;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 50px auto;
             padding: 20px;
-            background-color: white;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         h1 {
-            text-align: center;
-            color: #333;
+            color: #4a90e2;
+            margin-bottom: 20px;
         }
 
-        #schedule {
+        #result {
             margin-top: 20px;
-            text-align: center;
+            font-size: 18px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            text-align: left;
         }
 
-        .pair {
-            font-size: 1.5em;
-            margin: 20px;
+        p {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            transition: background-color 0.3s;
         }
 
-        footer {
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #666;
-            font-size: 0.9em;
+        p:hover {
+            background-color: #f0f8ff;
+        }
+
+        @media (max-width: 600px) {
+            #result {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Jadwal Tempat Duduk Harian</h1>
-        <div id="schedule">
-            <!-- Pasangan yang akan duduk bersama akan muncul di sini -->
-        </div>
-    </div>
-    <footer>
-        Dibuat oleh Bagus Arya
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+    <h1>Seat Randomizer</h1>
+    <div id="result"></div>
     <script>
-        // Daftar nama murid laki-laki dan perempuan
-        const lakiLaki = [
-            "ADILLA", "AHMAD NUR", "AHMAD SYEH", "AKMAL", "AMIR", "ANDHIKA", "BAGUS", "BINTANG", "HANDIKA", "HAYDAR", 
-            "LUCKY", "MUHAMMAD RICO", "MUHAMMAD YUSRIL", "NOVAL", "RAKA", "RAYES", "YUDHA"
+        const students = [
+            { name: "ADILLA NAZHRIL AHMAD", gender: "L" },
+            { name: "AHMAD NUR FALAHUL MUTTAQIN", gender: "L" },
+            { name: "AHMAD SYEH BUDIN", gender: "L" },
+            { name: "AKMAL AZHARIA ZALFA", gender: "L" },
+            { name: "ALMIRA MEYTA ANISA KIRANA", gender: "P" },
+            { name: "AMIR FAISAL ANNAFI", gender: "L" },
+            { name: "ANDHIKA RIZKY MAULANA PUTRA", gender: "L" },
+            { name: "ANDHINI MAYANG SARI", gender: "P" },
+            { name: "ANINDYA ARIN RAHMAHDANI", gender: "P" },
+            { name: "ARIN AYUNING TYAS", gender: "P" },
+            { name: "BAGUS ARYA LAKSANA", gender: "L" },
+            { name: "BINTANG ANGARA KUSUMA", gender: "L" },
+            { name: "CANDRAKA DEWI PUSPITA", gender: "P" },
+            { name: "CELIN CHIQUITTA CANDY CAROLINE", gender: "P" },
+            { name: "DIANITA AIRA DIYASTUTI", gender: "P" },
+            { name: "ELIZA NUR AZIZAH", gender: "P" },
+            { name: "FARAHDIYAH NUR NATASYA", gender: "P" },
+            { name: "HANDIKA GALANG WICAKSONO", gender: "L" },
+            { name: "HAYDAR JAFRAN MULTAZAM", gender: "L" },
+            { name: "INDRI DWI JULYANTI", gender: "P" },
+            { name: "INEZ AYU AGUSTIN", gender: "P" },
+            { name: "LUCKY FRANZACKY", gender: "L" },
+            { name: "MEVITA BUNGA CANTIKA", gender: "P" },
+            { name: "MERLINDA ZAHROTU NUR SITA", gender: "P" },
+            { name: "MUHAMMAD RICO RAMADHANI", gender: "L" },
+            { name: "MUHAMMAD YUSRIL ANWAR", gender: "L" },
+            { name: "NABELLA DIAN SAPUTRI", gender: "P" },
+            { name: "NADIV PRIAYUNINDHA", gender: "P" },
+            { name: "NIKEN AYU LARASATI", gender: "P" },
+            { name: "NOVAL TAUFIQ ARJUNANTA", gender: "L" },
+            { name: "RAKA ILHAM NARENDRA TAMA", gender: "L" },
+            { name: "RAYES PURWANTO", gender: "L" },
+            { name: "RENITA OKTAVIA YUMAIRAH", gender: "P" },
+            { name: "RERE SULISTYO", gender: "P" },
+            { name: "SELFI NIKMATUL KHOIROH", gender: "P" },
+            { name: "SHERIL ANAYA KIRANIA", gender: "P" },
+            { name: "SHERLY MIFTKHUL JANNAH", gender: "P" },
+            { name: "SHILA MAULANI", gender: "P" },
+            { name: "STEVANNY NAJA NOVELICA FELOVE", gender: "P" },
+            { name: "YUDHA JULIANTO", gender: "L" }
         ];
 
-        const perempuan = [
-            "ALMIRA", "ANDHINI", "ANINDYA", "ARIN", "CANDRAKA", "CELIN", "DIANITA", "ELIZA", "FARAHDIYAH", "INDRI", 
-            "INEZ", "MEVITA", "MERLINDA", "NABELLA", "NIKEN", "RENITA", "SHERIL", "SHILA"
-        ];
+        function stringHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        }
 
-        // Fungsi untuk mengacak urutan array menggunakan seed
-        function shuffle(array, seed) {
-            const rng = new Math.seedrandom(seed); // Seeded random generator
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function shuffleArray(array, seed) {
             for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(rng() * (i + 1));
+                const j = Math.floor(seededRandom(seed + i) * (i + 1));
                 [array[i], array[j]] = [array[j], array[i]];
             }
-            return array;
         }
 
-        // Fungsi untuk menampilkan pasangan yang dipilih
-        function displayPair() {
-            // Ambil tanggal UTC sebagai seed
-            const currentDate = new Date();
-            const seed = currentDate.getUTCFullYear() + '-' + (currentDate.getUTCMonth() + 1) + '-' + currentDate.getUTCDate();
-            
-            // Acak nama berdasarkan seed
-            const shuffledLakiLaki = shuffle([...lakiLaki], seed);
-            const shuffledPerempuan = shuffle([...perempuan], seed);
+        function randomizeSeats() {
+            const now = new Date();
+            const today = now.toISOString().slice(0, 10);
+            const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
+            const intervalIndex = Math.floor(minutesSinceMidnight / 45);
+            const seed = stringHash(today + "-" + intervalIndex);
 
-            // Buat jadwal untuk setiap hari dalam seminggu
-            const dayOfWeek = currentDate.getUTCDay(); // 0 = Minggu, 1 = Senin, ..., 6 = Sabtu
-            const pairIndex = dayOfWeek % Math.min(shuffledLakiLaki.length, shuffledPerempuan.length); // Index bergantung pada hari
+            const males = students.filter(student => student.gender === "L");
+            const females = students.filter(student => student.gender === "P");
 
-            const pair = [shuffledLakiLaki[pairIndex], shuffledPerempuan[pairIndex]];
+            shuffleArray(males, seed);
+            shuffleArray(females, seed);
 
-            const scheduleDiv = document.getElementById("schedule");
+            let result = "";
+            const maxPairs = Math.min(males.length, females.length);
 
-            if (pair) {
-                scheduleDiv.innerHTML = `<div class="pair"><strong>${pair[0]}</strong> duduk bersama <strong>${pair[1]}</strong></div>`;
-            } else {
-                scheduleDiv.innerHTML = `<div class="pair">Tidak ada jadwal saat ini</div>`;
+            // Pasangkan laki-laki dan perempuan sesuai dengan jumlah minimum dari keduanya
+            for (let i = 0; i < maxPairs; i++) {
+                result += `<p>${males[i].name} - ${females[i].name}</p>`;
             }
+
+            // Tangani sisa siswa jika jumlahnya tidak seimbang
+            if (males.length > maxPairs) {
+                for (let i = maxPairs; i < males.length; i++) {
+                    if (females.length > i) {
+                        result += `<p>${males[i].name} - ${females[i].name}</p>`;
+                    } else {
+                        result += `<p>${males[i].name} - ${males[i + 1 < males.length ? i + 1 : 0].name}</p>`;
+                    }
+                }
+            } else if (females.length > maxPairs) {
+                for (let i = maxPairs; i < females.length; i++) {
+                    if (males.length > i) {
+                        result += `<p>${females[i].name} - ${males[i].name}</p>`;
+                    } else {
+                        result += `<p>${females[i].name} - ${females[i + 1 < females.length ? i + 1 : 0].name}</p>`;
+                    }
+                }
+            }
+
+            document.getElementById("result").innerHTML = result;
         }
 
-        // Menampilkan jadwal saat halaman dimuat
-        window.onload = function() {
-            displayPair();
-        };
+        window.onload = randomizeSeats;
     </script>
 </body>
 </html>
