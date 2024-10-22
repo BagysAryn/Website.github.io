@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Tempat Duduk</title>
+    <title>Seat Randomizer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,6 +43,12 @@
             background-color: #f0f8ff;
         }
 
+        #timer {
+            font-size: 20px;
+            margin-top: 20px;
+            color: #d9534f; /* Color for the timer */
+        }
+
         @media (max-width: 600px) {
             #result {
                 width: 100%;
@@ -51,8 +57,9 @@
     </style>
 </head>
 <body>
-    <h1>Jadwal Tempat Duduk</h1>
+    <h1>Seat Randomizer</h1>
     <div id="result"></div>
+    <div id="timer"></div>
     <script>
         const students = [
             { name: "ADILLA NAZHRIL AHMAD", gender: "L" },
@@ -159,6 +166,17 @@
             }
 
             document.getElementById("result").innerHTML = result;
+
+            // Update timer
+            updateTimer(minutesSinceMidnight);
+        }
+
+        function updateTimer(minutesSinceMidnight) {
+            const nextInterval = Math.floor(minutesSinceMidnight / 45) + 1;
+            const nextShuffleTime = nextInterval * 45;
+            const remainingMinutes = nextShuffleTime - minutesSinceMidnight;
+
+            document.getElementById("timer").innerText = `Tersisa ${remainingMinutes} menit hingga pengacakan selanjutnya.`;
         }
 
         window.onload = randomizeSeats;
