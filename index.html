@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Duduk</title>
+    <title>Seat Randomizer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,82 +42,86 @@
         p:hover {
             background-color: #f0f8ff;
         }
-
-        @media (max-width: 600px) {
-            #result {
-                width: 100%;
-            }
-        }
-
-        #adminLink {
-            margin-top: 20px;
-            text-decoration: none;
-            color: #4a90e2;
-            font-weight: bold;
-        }
     </style>
 </head>
 <body>
-    <h1>Jadwal Duduk Besok</h1>
-    <div id="result">Hasil pengacakan akan ditampilkan di sini.</div>
-    <a id="adminLink" href="admin .html">Masuk Admin</a>
-
+    <h1>Seat Randomizer</h1>
+    <div id="result"></div>
     <script>
         const students = [
             { name: "ADILLA NAZHRIL AHMAD", gender: "L" },
             { name: "AHMAD NUR FALAHUL MUTTAQIN", gender: "L" },
-            { name: "AHMAD SYEH BUDIN", gender: "L" },
-            { name: "AKMAL AZHARIA ZALFA", gender: "L" },
-            { name: "ALMIRA MEYTA ANISA KIRANA", gender: "P" },
-            { name: "AMIR FAISAL ANNAFI", gender: "L" },
-            { name: "ANDHIKA RIZKY MAULANA PUTRA", gender: "L" },
-            { name: "ANDHINI MAYANG SARI", gender: "P" },
-            { name: "ANINDYA ARIN RAHMAHDANI", gender: "P" },
-            { name: "ARIN AYUNING TYAS", gender: "P" },
-            { name: "BAGUS ARYA LAKSANA", gender: "L" },
-            { name: "BINTANG ANGARA KUSUMA", gender: "L" },
-            { name: "CANDRAKA DEWI PUSPITA", gender: "P" },
-            { name: "CELIN CHIQUITTA CANDY CAROLINE", gender: "P" },
-            { name: "DIANITA AIRA DIYASTUTI", gender: "P" },
-            { name: "ELIZA NUR AZIZAH", gender: "P" },
-            { name: "FARAHDIYAH NUR NATASYA", gender: "P" },
-            { name: "HANDIKA GALANG WICAKSONO", gender: "L" },
-            { name: "HAYDAR JAFRAN MULTAZAM", gender: "L" },
-            { name: "INDRI DWI JULYANTI", gender: "P" },
-            { name: "INEZ AYU AGUSTIN", gender: "P" },
-            { name: "LUCKY FRANZACKY", gender: "L" },
-            { name: "MEVITA BUNGA CANTIKA", gender: "P" },
-            { name: "MERLINDA ZAHROTU NUR SITA", gender: "P" },
-            { name: "MUHAMMAD RICO RAMADHANI", gender: "L" },
-            { name: "MUHAMMAD YUSRIL ANWAR", gender: "L" },
-            { name: "NABELLA DIAN SAPUTRI", gender: "P" },
-            { name: "NADIV PRIAYUNINDHA", gender: "P" },
-            { name: "NIKEN AYU LARASATI", gender: "P" },
-            { name: "NOVAL TAUFIQ ARJUNANTA", gender: "L" },
-            { name: "RAKA ILHAM NARENDRA TAMA", gender: "L" },
-            { name: "RAYES PURWANTO", gender: "L" },
-            { name: "RENITA OKTAVIA YUMAIRAH", gender: "P" },
-            { name: "RERE SULISTYO", gender: "P" },
-            { name: "SELFI NIKMATUL KHOIROH", gender: "P" },
-            { name: "SHERIL ANAYA KIRANIA", gender: "P" },
-            { name: "SHERLY MIFTKHUL JANNAH", gender: "P" },
-            { name: "SHILA MAULANI", gender: "P" },
-            { name: "STEVANNY NAJA NOVELICA FELOVE", gender: "P" },
+            // Daftar siswa lainnya...
             { name: "YUDHA JULIANTO", gender: "L" }
         ];
 
-        function displayResults() {
-            const savedPairs = localStorage.getItem("seatPairs");
-            if (savedPairs) {
-                document.getElementById("result").innerHTML = JSON.parse(savedPairs).map(
-                    (pair, index) => `<p>${index + 1}. ${pair.name1} - ${pair.name2}</p>`
-                ).join("");
-            } else {
-                document.getElementById("result").innerText = "Belum ada hasil pengacakan.";
+        function shuffleArray(array, seed) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(seededRandom(seed + i) * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
         }
 
-        window.onload = displayResults;
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function randomizeSeats() {
+            const today = new Date().toISOString().slice(0, 10);
+            const savedPairs = localStorage.getItem("seatPairs_" + today);
+
+            if (savedPairs) {
+                displayPairs(JSON.parse(savedPairs));
+            } else {
+                let males = students.filter(student => student.gender === "L");
+                let females = students.filter(student => student.gender === "P");
+
+                const seed = today; // Gunakan tanggal sebagai seed
+                shuffleArray(males, seed);
+                shuffleArray(females, seed);
+
+                const pairs = [];
+                const maxPairs = Math.min(males.length, females.length);
+
+                for (let i = 0; i < maxPairs; i++) {
+                    pairs.push({ name1: males[i].name, name2: females[i].name });
+                }
+
+                if (males.length > maxPairs) {
+                    for (let i = maxPairs; i < males.length; i += 2) {
+                        if (i + 1 < males.length) {
+                            pairs.push({ name1: males[i].name, name2: males[i + 1].name });
+                        } else {
+                            pairs.push({ name1: males[i].name, name2: "Tanpa pasangan" });
+                        }
+                    }
+                }
+
+                if (females.length > maxPairs) {
+                    for (let i = maxPairs; i < females.length; i += 2) {
+                        if (i + 1 < females.length) {
+                            pairs.push({ name1: females[i].name, name2: females[i + 1].name });
+                        } else {
+                            pairs.push({ name1: females[i].name, name2: "Tanpa pasangan" });
+                        }
+                    }
+                }
+
+                localStorage.setItem("seatPairs_" + today, JSON.stringify(pairs));
+                displayPairs(pairs);
+            }
+        }
+
+        function displayPairs(pairs) {
+            let result = "";
+            pairs.forEach(pair => {
+                result += `<p>${pair.name1} - ${pair.name2}</p>`;
+            });
+            document.getElementById("result").innerHTML = result;
+        }
+
+        window.onload = randomizeSeats;
     </script>
 </body>
 </html>
