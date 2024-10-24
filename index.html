@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jadwal Duduk</title>
+    <title>Seat Randomizer - Siswa</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -43,23 +43,25 @@
             background-color: #f0f8ff;
         }
 
-        #timer {
-            font-size: 20px;
-            margin-top: 20px;
-            color: #d9534f; /* Color for the timer */
-        }
-
         @media (max-width: 600px) {
             #result {
                 width: 100%;
             }
         }
+
+        #adminLink {
+            margin-top: 20px;
+            text-decoration: none;
+            color: #4a90e2;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
-    <h1>Jadwal Duduk Besok</h1>
-    <div id="result"></div>
-    <div id="timer"></div>
+    <h1>Seat Randomizer - Siswa</h1>
+    <div id="result">Hasil pengacakan akan ditampilkan di sini.</div>
+    <a id="adminLink" href="admin .html">Masuk Admin</a>
+
     <script>
         const students = [
             { name: "ADILLA NAZHRIL AHMAD", gender: "L" },
@@ -104,91 +106,18 @@
             { name: "YUDHA JULIANTO", gender: "L" }
         ];
 
-        function stringHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                hash = ((hash << 5) - hash) + str.charCodeAt(i);
-                hash |= 0; // Convert to 32bit integer
-            }
-            return hash;
-        }
-
-        function seededRandom(seed) {
-            let x = Math.sin(seed) * 10000;
-            return x - Math.floor(x);
-        }
-
-        function shuffleArray(array, seed) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(seededRandom(seed + i) * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        function displayResults() {
+            const savedPairs = localStorage.getItem("seatPairs");
+            if (savedPairs) {
+                document.getElementById("result").innerHTML = JSON.parse(savedPairs).map(
+                    (pair, index) => `<p>${index + 1}. ${pair.name1} - ${pair.name2}</p>`
+                ).join("");
+            } else {
+                document.getElementById("result").innerText = "Belum ada hasil pengacakan.";
             }
         }
 
-        function randomizeSeats() {
-            const now = new Date();
-            const today = now.toISOString().slice(0, 10); // Menggunakan tanggal sebagai seed
-            const seed = stringHash(today);
-
-            let males = students.filter(student => student.gender === "L");
-            let females = students.filter(student => student.gender === "P");
-
-            shuffleArray(males, seed);
-            shuffleArray(females, seed);
-
-            let result = "";
-            const pairs = [];
-
-            // Pasangkan laki-laki dan perempuan
-            const maxPairs = Math.min(males.length, females.length);
-            for (let i = 0; i < maxPairs; i++) {
-                pairs.push({ name1: males[i].name, name2: females[i].name });
-            }
-
-            // Jika ada sisa siswa laki-laki atau perempuan, pasangkan mereka secara berurutan
-            if (males.length > maxPairs) {
-                for (let i = maxPairs; i < males.length; i += 2) {
-                    if (i + 1 < males.length) {
-                        pairs.push({ name1: males[i].name, name2: males[i + 1].name });
-                    } else {
-                        pairs.push({ name1: males[i].name, name2: "Tanpa pasangan" });
-                    }
-                }
-            } else if (females.length > maxPairs) {
-                for (let i = maxPairs; i < females.length; i += 2) {
-                    if (i + 1 < females.length) {
-                        pairs.push({ name1: females[i].name, name2: females[i + 1].name });
-                    } else {
-                        pairs.push({ name1: females[i].name, name2: "Tanpa pasangan" });
-                    }
-                }
-            }
-
-            // Tampilkan hasil pasangan tanpa duplikat
-            pairs.forEach(pair => {
-                result += `<p>${pair.name1} - ${pair.name2}</p>`;
-            });
-
-            // Tampilkan hasil
-            document.getElementById("result").innerHTML = result;
-
-            // Update timer
-            updateTimer(now);
-        }
-
-        function updateTimer(now) {
-            const nextMidnight = new Date(now);
-            nextMidnight.setHours(24, 0, 0, 0); // Waktu tengah malam berikutnya
-            const remainingSeconds = (nextMidnight - now) / 1000;
-
-            const hours = Math.floor(remainingSeconds / 3600);
-            const minutes = Math.floor((remainingSeconds % 3600) / 60);
-            const seconds = Math.floor(remainingSeconds % 60);
-
-            document.getElementById("timer").innerText = `Tersisa ${hours} jam ${minutes} menit ${seconds} detik hingga pengacakan selanjutnya.`;
-        }
-
-        window.onload = randomizeSeats;
+        window.onload = displayResults;
     </script>
 </body>
 </html>
