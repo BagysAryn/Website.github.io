@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seat Randomizer - Admin</title>
+    <title>Admin - Seat Randomizer</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -21,110 +21,57 @@
             margin-bottom: 20px;
         }
 
-        #admin {
-            margin-top: 20px;
-            display: none;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            width: 80%;
-            max-width: 600px;
-            text-align: center;
-        }
-
-        .admin-input {
-            margin-bottom: 10px;
-        }
-
-        .admin-input input {
-            width: calc(100% - 22px);
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        .admin-input button, #randomizeButton {
-            padding: 10px;
-            margin-top: 5px;
-            border: none;
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
             background-color: #4a90e2;
-            color: white;
-            border-radius: 4px;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
 
-        .admin-input button:hover, #randomizeButton:hover {
-            background-color: #357ABD;
+        button:hover {
+            background-color: #357ab7;
         }
     </style>
 </head>
 <body>
-    <h1>Seat Randomizer - Admin</h1>
-    <div class="admin-input">
-        <input type="password" id="adminPassword" placeholder="Masukkan Password Admin">
-        <button id="adminButton">Masuk Admin</button>
-    </div>
-
-    <div id="admin">
-        <button id="randomizeButton">Acak Siswa</button>
-    </div>
-
+    <h1>Admin Panel - Seat Randomizer</h1>
+    <button onclick="randomizeSeats()">Acak Ulang</button>
+    <p id="status"></p>
     <script>
-        const password = "0817";
         const students = [
             { name: "ADILLA NAZHRIL AHMAD", gender: "L" },
             { name: "AHMAD NUR FALAHUL MUTTAQIN", gender: "L" },
-            { name: "AHMAD SYEH BUDIN", gender: "L" },
-            { name: "AKMAL AZHARIA ZALFA", gender: "L" },
-            { name: "ALMIRA MEYTA ANISA KIRANA", gender: "P" },
-            { name: "AMIR FAISAL ANNAFI", gender: "L" },
-            { name: "ANDHIKA RIZKY MAULANA PUTRA", gender: "L" },
-            { name: "ANDHINI MAYANG SARI", gender: "P" },
-            { name: "ANINDYA ARIN RAHMAHDANI", gender: "P" },
-            { name: "ARIN AYUNING TYAS", gender: "P" },
-            { name: "BAGUS ARYA LAKSANA", gender: "L" },
-            { name: "BINTANG ANGARA KUSUMA", gender: "L" },
-            { name: "CANDRAKA DEWI PUSPITA", gender: "P" },
-            { name: "CELIN CHIQUITTA CANDY CAROLINE", gender: "P" },
-            { name: "DIANITA AIRA DIYASTUTI", gender: "P" },
-            { name: "ELIZA NUR AZIZAH", gender: "P" },
-            { name: "FARAHDIYAH NUR NATASYA", gender: "P" },
-            { name: "HANDIKA GALANG WICAKSONO", gender: "L" },
-            { name: "HAYDAR JAFRAN MULTAZAM", gender: "L" },
-            { name: "INDRI DWI JULYANTI", gender: "P" },
-            { name: "INEZ AYU AGUSTIN", gender: "P" },
-            { name: "LUCKY FRANZACKY", gender: "L" },
-            { name: "MEVITA BUNGA CANTIKA", gender: "P" },
-            { name: "MERLINDA ZAHROTU NUR SITA", gender: "P" },
-            { name: "MUHAMMAD RICO RAMADHANI", gender: "L" },
-            { name: "MUHAMMAD YUSRIL ANWAR", gender: "L" },
-            { name: "NABELLA DIAN SAPUTRI", gender: "P" },
-            { name: "NADIV PRIAYUNINDHA", gender: "P" },
-            { name: "NIKEN AYU LARASATI", gender: "P" },
-            { name: "NOVAL TAUFIQ ARJUNANTA", gender: "L" },
-            { name: "RAKA ILHAM NARENDRA TAMA", gender: "L" },
-            { name: "RAYES PURWANTO", gender: "L" },
-            { name: "RENITA OKTAVIA YUMAIRAH", gender: "P" },
-            { name: "RERE SULISTYO", gender: "P" },
-            { name: "SELFI NIKMATUL KHOIROH", gender: "P" },
-            { name: "SHERIL ANAYA KIRANIA", gender: "P" },
-            { name: "SHERLY MIFTKHUL JANNAH", gender: "P" },
-            { name: "SHILA MAULANI", gender: "P" },
-            { name: "STEVANNY NAJA NOVELICA FELOVE", gender: "P" },
+            // Daftar siswa lainnya...
             { name: "YUDHA JULIANTO", gender: "L" }
         ];
 
+        function shuffleArray(array, seed) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(seededRandom(seed + i) * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
         function randomizeSeats() {
+            const today = new Date().toISOString().slice(0, 10);
             let males = students.filter(student => student.gender === "L");
             let females = students.filter(student => student.gender === "P");
 
-            // Shuffle function
-            males.sort(() => Math.random() - 0.5);
-            females.sort(() => Math.random() - 0.5);
+            const seed = today;
+            shuffleArray(males, seed);
+            shuffleArray(females, seed);
 
-            let pairs = [];
+            const pairs = [];
             const maxPairs = Math.min(males.length, females.length);
+
             for (let i = 0; i < maxPairs; i++) {
                 pairs.push({ name1: males[i].name, name2: females[i].name });
             }
@@ -149,21 +96,9 @@
                 }
             }
 
-            localStorage.setItem("seatPairs", JSON.stringify(pairs));
-            alert("Pengacakan selesai!");
+            localStorage.setItem("seatPairs_" + today, JSON.stringify(pairs));
+            document.getElementById("status").innerText = "Pengacakan berhasil! Silakan buka halaman utama untuk melihat hasil.";
         }
-
-        document.getElementById("adminButton").addEventListener("click", function () {
-            const inputPassword = document.getElementById("adminPassword").value;
-            if (inputPassword === password) {
-                document.getElementById("admin").style.display = "block";
-                alert("Berhasil masuk sebagai admin.");
-            } else {
-                alert("Password salah!");
-            }
-        });
-
-        document.getElementById("randomizeButton").addEventListener("click", randomizeSeats);
     </script>
 </body>
 </html>
