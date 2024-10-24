@@ -57,7 +57,7 @@
     </style>
 </head>
 <body>
-    <h1>Jadwal Duduk</h1>
+    <h1>Jadwal Duduk TJKT 3</h1>
     <div id="result"></div>
     <div id="timer"></div>
     <script>
@@ -127,52 +127,65 @@
 
         function randomizeSeats() {
             const now = new Date();
-            const today = now.toISOString().slice(0, 10);
-            const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
-            const intervalIndex = Math.floor(minutesSinceMidnight / 45);
-            const seed = stringHash(today + "-" + intervalIndex);
+            const today = now.toISOString().slice(0, 10); // Menggunakan tanggal sebagai seed
+            const seed = stringHash(today);
 
-            const males = students.filter(student => student.gender === "L").slice(0, 20);
-            const females = students.filter(student => student.gender === "P").slice(0, 20);
+            let males = students.filter(student => student.gender === "L");
+            let females = students.filter(student => student.gender === "P");
 
             shuffleArray(males, seed);
             shuffleArray(females, seed);
 
             let result = "";
-            const maxPairs = Math.min(males.length, females.length);
+            const pairs = [];
 
             // Pasangkan laki-laki dan perempuan
+            const maxPairs = Math.min(males.length, females.length);
             for (let i = 0; i < maxPairs; i++) {
-                result += `<p>${males[i].name} - ${females[i].name}</p>`;
+                pairs.push({ name1: males[i].name, name2: females[i].name });
             }
 
-            // Tangani sisa siswa jika jumlahnya tidak seimbang
+            // Jika ada sisa siswa laki-laki atau perempuan, pasangkan mereka secara berurutan
             if (males.length > maxPairs) {
-                for (let i = maxPairs; i < males.length; i++) {
-                    result += `<p>${males[i].name} - ${males[i + 1 < males.length ? i + 1 : 0].name}</p>`;
+                for (let i = maxPairs; i < males.length; i += 2) {
+                    if (i + 1 < males.length) {
+                        pairs.push({ name1: males[i].name, name2: males[i + 1].name });
+                    } else {
+                        pairs.push({ name1: males[i].name, name2: "Tanpa pasangan" });
+                    }
                 }
             } else if (females.length > maxPairs) {
-                for (let i = maxPairs; i < females.length; i++) {
-                    result += `<p>${females[i].name} - ${females[i + 1 < females.length ? i + 1 : 0].name}</p>`;
+                for (let i = maxPairs; i < females.length; i += 2) {
+                    if (i + 1 < females.length) {
+                        pairs.push({ name1: females[i].name, name2: females[i + 1].name });
+                    } else {
+                        pairs.push({ name1: females[i].name, name2: "Tanpa pasangan" });
+                    }
                 }
             }
+
+            // Tampilkan hasil pasangan tanpa duplikat
+            pairs.forEach(pair => {
+                result += `<p>${pair.name1} - ${pair.name2}</p>`;
+            });
 
             // Tampilkan hasil
             document.getElementById("result").innerHTML = result;
 
             // Update timer
-            updateTimer(minutesSinceMidnight);
+            updateTimer(now);
         }
 
-        function updateTimer(minutesSinceMidnight) {
-            const nextInterval = Math.floor(minutesSinceMidnight / 45) + 1;
-            const nextShuffleTime = nextInterval * 45;
-            const remainingSeconds = (nextShuffleTime - minutesSinceMidnight) * 60 - new Date().getSeconds();
+        function updateTimer(now) {
+            const nextMidnight = new Date(now);
+            nextMidnight.setHours(24, 0, 0, 0); // Waktu tengah malam berikutnya
+            const remainingSeconds = (nextMidnight - now) / 1000;
 
-            const minutes = Math.floor(remainingSeconds / 60);
-            const seconds = remainingSeconds % 60;
+            const hours = Math.floor(remainingSeconds / 3600);
+            const minutes = Math.floor((remainingSeconds % 3600) / 60);
+            const seconds = Math.floor(remainingSeconds % 60);
 
-            document.getElementById("timer").innerText = `Tersisa ${minutes} menit ${seconds} detik hingga pengacakan selanjutnya.`;
+            document.getElementById("timer").innerText = `Tersisa ${hours} jam ${minutes} menit ${seconds} detik hingga pengacakan selanjutnya.`;
         }
 
         window.onload = randomizeSeats;
