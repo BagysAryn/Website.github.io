@@ -42,31 +42,156 @@
         p:hover {
             background-color: #f0f8ff;
         }
+
+        #timer {
+            font-size: 20px;
+            margin-top: 20px;
+            color: #d9534f; /* Color for the timer */
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4a90e2;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #357ab7;
+        }
+
+        @media (max-width: 600px) {
+            #result {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
     <h1>Seat Randomizer</h1>
     <div id="result"></div>
+    <div id="timer"></div>
+    <button onclick="window.location.href='admin.html'">Masuk ke Halaman Admin</button>
     <script>
-        function loadPairs() {
-            const today = new Date().toISOString().slice(0, 10);
-            const savedPairs = localStorage.getItem("seatPairs_" + today);
-            if (savedPairs) {
-                displayPairs(JSON.parse(savedPairs));
-            } else {
-                document.getElementById("result").innerText = "Belum ada hasil pengacakan.";
+        const students = [
+            { name: "ADILLA NAZHRIL AHMAD", gender: "L" },
+            { name: "AHMAD NUR FALAHUL MUTTAQIN", gender: "L" },
+            { name: "AHMAD SYEH BUDIN", gender: "L" },
+            { name: "AKMAL AZHARIA ZALFA", gender: "L" },
+            { name: "ALMIRA MEYTA ANISA KIRANA", gender: "P" },
+            { name: "AMIR FAISAL ANNAFI", gender: "L" },
+            { name: "ANDHIKA RIZKY MAULANA PUTRA", gender: "L" },
+            { name: "ANDHINI MAYANG SARI", gender: "P" },
+            { name: "ANINDYA ARIN RAHMAHDANI", gender: "P" },
+            { name: "ARIN AYUNING TYAS", gender: "P" },
+            { name: "BAGUS ARYA LAKSANA", gender: "L" },
+            { name: "BINTANG ANGARA KUSUMA", gender: "L" },
+            { name: "CANDRAKA DEWI PUSPITA", gender: "P" },
+            { name: "CELIN CHIQUITTA CANDY CAROLINE", gender: "P" },
+            { name: "DIANITA AIRA DIYASTUTI", gender: "P" },
+            { name: "ELIZA NUR AZIZAH", gender: "P" },
+            { name: "FARAHDIYAH NUR NATASYA", gender: "P" },
+            { name: "HANDIKA GALANG WICAKSONO", gender: "L" },
+            { name: "HAYDAR JAFRAN MULTAZAM", gender: "L" },
+            { name: "INDRI DWI JULYANTI", gender: "P" },
+            { name: "INEZ AYU AGUSTIN", gender: "P" },
+            { name: "LUCKY FRANZACKY", gender: "L" },
+            { name: "MEVITA BUNGA CANTIKA", gender: "P" },
+            { name: "MERLINDA ZAHROTU NUR SITA", gender: "P" },
+            { name: "MUHAMMAD RICO RAMADHANI", gender: "L" },
+            { name: "MUHAMMAD YUSRIL ANWAR", gender: "L" },
+            { name: "NABELLA DIAN SAPUTRI", gender: "P" },
+            { name: "NADIV PRIAYUNINDHA", gender: "P" },
+            { name: "NIKEN AYU LARASATI", gender: "P" },
+            { name: "NOVAL TAUFIQ ARJUNANTA", gender: "L" },
+            { name: "RAKA ILHAM NARENDRA TAMA", gender: "L" },
+            { name: "RAYES PURWANTO", gender: "L" },
+            { name: "RENITA OKTAVIA YUMAIRAH", gender: "P" },
+            { name: "RERE SULISTYO", gender: "P" },
+            { name: "SELFI NIKMATUL KHOIROH", gender: "P" },
+            { name: "SHERIL ANAYA KIRANIA", gender: "P" },
+            { name: "SHERLY MIFTKHUL JANNAH", gender: "P" },
+            { name: "SHILA MAULANI", gender: "P" },
+            { name: "STEVANNY NAJA NOVELICA FELOVE", gender: "P" },
+            { name: "YUDHA JULIANTO", gender: "L" }
+        ];
+
+        function stringHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = ((hash << 5) - hash) + str.charCodeAt(i);
+                hash |= 0; // Convert to 32bit integer
+            }
+            return hash;
+        }
+
+        function seededRandom(seed) {
+            let x = Math.sin(seed) * 10000;
+            return x - Math.floor(x);
+        }
+
+        function shuffleArray(array, seed) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(seededRandom(seed + i) * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
             }
         }
 
-        function displayPairs(pairs) {
+        function randomizeSeats() {
+            const today = new Date().toISOString().slice(0, 10);
+            const males = students.filter(student => student.gender === "L");
+            const females = students.filter(student => student.gender === "P");
+
+            const seed = stringHash(today);
+            shuffleArray(males, seed);
+            shuffleArray(females, seed);
+
             let result = "";
-            pairs.forEach(pair => {
-                result += `<p>${pair.name1} - ${pair.name2}</p>`;
-            });
+            const maxPairs = Math.min(males.length, females.length);
+
+            // Create pairs
+            for (let i = 0; i < maxPairs; i++) {
+                result += `<p>${males[i].name} - ${females[i].name}</p>`;
+            }
+
+            // Handle remaining students
+            if (males.length > maxPairs) {
+                for (let i = maxPairs; i < males.length; i++) {
+                    result += `<p>${males[i].name} - Tanpa pasangan</p>`;
+                }
+            } else if (females.length > maxPairs) {
+                for (let i = maxPairs; i < females.length; i++) {
+                    result += `<p>${females[i].name} - Tanpa pasangan</p>`;
+                }
+            }
+
             document.getElementById("result").innerHTML = result;
+
+            // Update timer
+            updateTimer();
         }
 
-        window.onload = loadPairs;
+        function updateTimer() {
+            const now = new Date();
+            const tomorrow = new Date();
+            tomorrow.setDate(now.getDate() + 1);
+            tomorrow.setHours(0, 0, 0, 0);
+
+            const remainingTime = tomorrow - now;
+            const minutesRemaining = Math.floor((remainingTime % (1000 * 60 * 60)) / (1000 * 60));
+            const secondsRemaining = Math.floor((remainingTime % (1000 * 60)) / 1000);
+
+            document.getElementById("timer").innerText = `Tersisa ${minutesRemaining} menit dan ${secondsRemaining} detik hingga pengacakan selanjutnya.`;
+        }
+
+        window.onload = function() {
+            randomizeSeats();
+            setInterval(updateTimer, 1000); // Update timer every second
+        };
     </script>
 </body>
 </html>
